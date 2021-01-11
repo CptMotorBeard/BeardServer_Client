@@ -1,23 +1,16 @@
 using Newtonsoft.Json.Linq;
+using shared;
 
 namespace BeardServer
-{
-    public enum ResponseCode
-    {
-        OK              = 200,
-        NotFound        = 404,
-        GatewayTimeout  = 504,
-        Invalid         = 1000
-    }
-
+{    
     public abstract class Response
     {
-        public ResponseCode ServerResponse;
-        public bool IsSuccess => ServerResponse == ResponseCode.OK;
+        public BeardServerManager.ResponseCodes ServerResponse;
+        public bool IsSuccess => ServerResponse == BeardServerManager.ResponseCodes.OK;
 
         public Response() { }
 
-        public void ParseResponseData(JToken json, ResponseCode responseCode)
+        public void ParseResponseData(JToken json, BeardServerManager.ResponseCodes responseCode)
         {
             ServerResponse = responseCode;
             if (IsSuccess)

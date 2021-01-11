@@ -1,14 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using shared;
 
 namespace BeardServer
 {
     public class ClientSend
     {
-        private static ulong mResponseIndex = 0;
+        private static int mResponseIndex = 0;
 
-        private static Task<TResponse> SendTransmissionToServer<TResponse>(ClientAction action, JObject transmissionData = null) where TResponse : Response, new()
+        private static Task<TResponse> SendTransmissionToServer<TResponse>(string action, JObject transmissionData = null) where TResponse : Response, new()
         {
             TaskCompletionSource<TResponse> taskCompletion = new TaskCompletionSource<TResponse>();
             SendTCPData(taskCompletion, action, transmissionData);
@@ -16,9 +17,9 @@ namespace BeardServer
             return taskCompletion.Task;
         }
 
-        private static void SendTCPData<TResponse>(TaskCompletionSource<TResponse> taskCompletion, ClientAction action, JObject transmissionData) where TResponse : Response, new()
+        private static void SendTCPData<TResponse>(TaskCompletionSource<TResponse> taskCompletion, string action, JObject transmissionData) where TResponse : Response, new()
         {
-            Action<JToken, ResponseCode> responseAction = (JToken responseData, ResponseCode responseCode) =>
+            Action<JToken, BeardServerManager.ResponseCodes> responseAction = (JToken responseData, BeardServerManager.ResponseCodes responseCode) =>
             {
                 TResponse res = new TResponse();
                 res.ParseResponseData(responseData, responseCode);
@@ -30,10 +31,10 @@ namespace BeardServer
 
             ThreadHelper.ExecuteOnMainThread(() =>
             {
-                using (Packet p = new Packet((int)action))
+                using (Packet p = new Packet(mResponseIndex))
                 {
                     JObject finalTransmission = new JObject();
-                    finalTransmission.Add(NetworkKeys.kResponseId, mResponseIndex);
+                    finalTransmission.Add(NetworkKeys.kAction, action);
 
                     if (transmissionData != null)
                         finalTransmission.Add(NetworkKeys.kData, transmissionData);

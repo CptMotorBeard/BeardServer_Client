@@ -58,7 +58,7 @@ namespace BeardServer
         {
             mPacketHandlers = new Dictionary<int, PacketHandler>()
             {
-                { (int)ServerAction.ResponseCode, ClientHandler.ReceiveResponseCode }
+                { 0, ClientHandler.ReceiveResponseCode }
             };
         }
 
