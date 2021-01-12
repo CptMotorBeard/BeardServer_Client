@@ -10,25 +10,39 @@ namespace BeardServer
     {
         public static Dictionary<int, Action<JToken, BeardServerManager.ResponseCodes>> AwaitedResponses = new Dictionary<int, Action<JToken, BeardServerManager.ResponseCodes>>();
 
-        public static void ReceiveResponseCode(Packet p)
+        private delegate void PacketHandler(int transmissionId, BeardServerManager.ResponseCodes response, JToken data);
+        
+        private static Dictionary<string, PacketHandler> mPacketHandlers = new Dictionary<string, PacketHandler>()
+        {
+            { NetworkActions.kGeneralResponse, ReceiveResponseCode }
+        };
+
+        public static void ReceivedPacket(Packet p, int transmissionId)
         {
             JObject json = p.Read();
 
-            int id              = json[NetworkKeys.kAction].ToObject<int>();
-            int responseCode    = json[NetworkKeys.kResponseCode].ToObject<int>();
+            string action = json[NetworkKeys.kAction].ToObject<string>();
+            BeardServerManager.ResponseCodes response = json[NetworkKeys.kResponseCode].ToObject<BeardServerManager.ResponseCodes>();
 
-            JToken body = "";
+            JToken data = "";
             if (json.ContainsKey(NetworkKeys.kData))
             {
-                body = json[NetworkKeys.kData];
+                data = json[NetworkKeys.kData];
             }
 
-            if (AwaitedResponses.ContainsKey(id))
+            if (mPacketHandlers.ContainsKey(action))
             {
-                BeardServerManager.ResponseCodes r = (BeardServerManager.ResponseCodes)responseCode;
-                AwaitedResponses[id](body, r);
+                mPacketHandlers[action](transmissionId, response, data);
+            }
+        }
 
-                AwaitedResponses.Remove(id);
+        public static void ReceiveResponseCode(int transmissionId, BeardServerManager.ResponseCodes response, JToken data)
+        {            
+            if (AwaitedResponses.ContainsKey(transmissionId))
+            {
+                AwaitedResponses[transmissionId](data, response);
+
+                AwaitedResponses.Remove(transmissionId);
             }
         }
     }

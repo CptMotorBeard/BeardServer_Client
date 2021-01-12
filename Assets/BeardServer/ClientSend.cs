@@ -7,6 +7,11 @@ namespace BeardServer
 {
     public class ClientSend
     {
+        public static Task<GeneralResponse> SendGeneralRequestToServer()
+        {
+            return SendTransmissionToServer<GeneralResponse>(NetworkActions.kGeneralResponse);
+        }
+
         private static int mResponseIndex = 0;
 
         private static Task<TResponse> SendTransmissionToServer<TResponse>(string action, JObject transmissionData = null) where TResponse : Response, new()

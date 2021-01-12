@@ -21,4 +21,12 @@ namespace BeardServer
 
         protected abstract void Parse(JToken json);
     }
+
+    public class GeneralResponse : Response
+    {
+        protected override void Parse(JToken json)
+        {
+            // No response data
+        }
+    }
 }

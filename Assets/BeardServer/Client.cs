@@ -31,9 +31,6 @@ namespace BeardServer
         private bool bIsReconnecting = false;
         private bool bIsRunning = false;
 
-        private delegate void PacketHandler(Packet p);
-        private static Dictionary<int, PacketHandler> mPacketHandlers;
-
         private IPAddress   mReconnectionIP;
         private int         mReconnectionPort;
 
@@ -52,14 +49,6 @@ namespace BeardServer
         public void Dispose()
         {
             tcp.Dispose();
-        }
-
-        private void InitializePacketHandlers()
-        {
-            mPacketHandlers = new Dictionary<int, PacketHandler>()
-            {
-                { 0, ClientHandler.ReceiveResponseCode }
-            };
         }
 
         private void OnConnected()
@@ -105,8 +94,6 @@ namespace BeardServer
         {
             tcp = new TCP();
             bIsRunning = true;
-
-            InitializePacketHandlers();
         }
 
         private void Update()
@@ -230,7 +217,7 @@ namespace BeardServer
 
                     byte[] data = new byte[byteLength];
                     Array.Copy(mReceiveBuffer, data, byteLength);
-
+                    mReceivedData.SetBytes(mReceiveBuffer);
                     mReceivedData.Reset(HandleData(data));
                     mStream.BeginRead(mReceiveBuffer, 0, kDataBufferSize, ReceiveCallback, null);
                 }
@@ -243,6 +230,14 @@ namespace BeardServer
 
             private bool HandleData(byte[] data)
             {
+                /*
+		        * Each packet received should contain the following:
+		        *	4 bytes			- Total Packet size
+		        *	4 bytes			- Packet ID
+		        *	4 bytes			- packet data size
+		        *	remaining bytes	- packet data
+		        */
+
                 int packetLength = 0;
 
                 if (mReceivedData.UnreadLength() >= 4)
@@ -261,15 +256,7 @@ namespace BeardServer
                         using (Packet _packet = new Packet(packetBytes))
                         {
                             int packetId = _packet.ReadInt();
-
-                            if (mPacketHandlers.TryGetValue(packetId, out PacketHandler packetHandler))
-                            {
-                                packetHandler(_packet);
-                            }
-                            else
-                            {
-                                Debug.LogWarning($"[BeardServer] :: Received invalid packet id {packetId}");
-                            }
+                            ClientHandler.ReceivedPacket(_packet, packetId);
                         }
                     });
 
