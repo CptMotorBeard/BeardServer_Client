@@ -14,3 +14,19 @@ Data sent to and from the server can be of any form using the Packet class, but 
 
 In the project provided with this code there is an example of connecting to a server on localhost
 SendGeneralRequestToServer along with GeneralResponse are examples of how a request can be sent and awaited
+
+This project requires a Newtonsoft JSON. For unity it can be added to the package manager by adding the following to Packages/manifest.json
+```json
+"scopedRegistries": [
+    {
+        "name": "Packages from jillejr",
+        "url": "https://npm.cloudsmith.io/jillejr/newtonsoft-json-for-unity/",
+        "scopes": [
+            "jillejr"
+        ]
+    }
+],
+"dependencies": {
+    "jillejr.newtonsoft.json-for-unity": "12.0.301"
+}
+```
